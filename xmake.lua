@@ -3,8 +3,9 @@ add_rules("mode.release", "mode.debug")
 
 set_languages("c++20")
 
--- Use Homebrew LLVM on macOS, default toolchain on other platforms.
-if is_os("macosx") then
+-- On macOS, prefer Homebrew LLVM for better C++20 support.
+-- Falls back to Xcode Clang on CI runners where LLVM isn't installed.
+if is_os("macosx") and os.exists("/opt/homebrew/opt/llvm") then
     set_config("sdk", "/opt/homebrew/opt/llvm")
     set_toolchains("llvm")
 end

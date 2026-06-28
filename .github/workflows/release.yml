@@ -15,19 +15,13 @@ on:
 
 jobs:
 
-  # ── macOS ──────────────────────────────────────────────────────────────
+  # ── macOS (arm64) ──────────────────────────────────────────────────────
   macos:
-    strategy:
-      matrix:
-        arch: [arm64, x64]
-    runs-on: ${{ matrix.arch == 'arm64' && 'macos-latest' || 'macos-13' }}
+    runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install tools
-        if: matrix.arch == 'x64'
-        run: brew install llvm
       - name: Install create-dmg
         run: brew install create-dmg
 
@@ -38,7 +32,7 @@ jobs:
 
       - name: Build
         run: |
-          xmake f -m release -p macosx -a ${{ matrix.arch }}
+          xmake f -y -m release -p macosx -a arm64
           xmake
 
       - name: Package  (.dmg + .zip)
@@ -47,7 +41,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Calculator-macos-${{ matrix.arch }}
+          name: Calculator-macos-arm64
           path: build/dist/*.dmg
           if-no-files-found: error
 
@@ -68,7 +62,7 @@ jobs:
 
       - name: Build
         run: |
-          xmake f -m release -p windows -a x64
+          xmake f -y -m release -p windows -a x64
           xmake
 
       - name: Package  (NSIS installer + .zip)
