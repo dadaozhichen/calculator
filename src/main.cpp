@@ -21,10 +21,13 @@
 #include <exception>
 #ifdef __APPLE__
 #  include <OpenGL/gl.h>
+#else
+#  include <GL/gl.h>
 #endif
 #include <limits>
 #include <optional>
 #include <ranges>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <utility>
