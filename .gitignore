@@ -1,0 +1,22 @@
+# Build output
+build/
+*.o
+*.obj
+*.d
+
+# IDE & tools
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+*.dSYM/
+
+# xmake
+.xmake/
+
+# clangd
+.cache/

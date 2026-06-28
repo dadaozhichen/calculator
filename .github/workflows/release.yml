@@ -1,0 +1,110 @@
+# GitHub Actions — Build & Release Calculator
+#
+# On tag push (v*)  →  builds, creates DMG (macOS) + NSIS installer (Windows),
+#                      uploads everything to GitHub Releases.
+# On push/PR to main →  build-only check (no upload).
+
+name: Build & Release
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  # ── macOS ──────────────────────────────────────────────────────────────
+  macos:
+    strategy:
+      matrix:
+        arch: [arm64, x64]
+    runs-on: ${{ matrix.arch == 'arm64' && 'macos-latest' || 'macos-13' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        if: matrix.arch == 'x64'
+        run: brew install llvm
+      - name: Install create-dmg
+        run: brew install create-dmg
+
+      - name: Setup Xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: latest
+
+      - name: Build
+        run: |
+          xmake f -m release -p macosx -a ${{ matrix.arch }}
+          xmake
+
+      - name: Package  (.dmg + .zip)
+        run: bash scripts/package.sh --skip-build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Calculator-macos-${{ matrix.arch }}
+          path: build/dist/*.dmg
+          if-no-files-found: error
+
+  # ── Windows ────────────────────────────────────────────────────────────
+  windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install NSIS
+        run: choco install nsis --no-progress
+
+      - name: Setup Xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: latest
+
+      - name: Build
+        run: |
+          xmake f -m release -p windows -a x64
+          xmake
+
+      - name: Package  (NSIS installer + .zip)
+        run: bash scripts/package.sh --skip-build
+        shell: bash
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Calculator-windows-x64
+          path: |
+            build/dist/*.exe
+            build/dist/*.zip
+          if-no-files-found: error
+
+  # ── GitHub Release (tag push only) ─────────────────────────────────────
+  release:
+    needs: [macos, windows]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: _artifacts
+
+      - name: Collect files
+        run: |
+          mkdir -p _release
+          find _artifacts -type f \( -name '*.dmg' -o -name '*.exe' -o -name '*.zip' \) \
+            -exec cp {} _release/ \;
+          ls -lh _release/
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: _release/*
+          generate_release_notes: true
