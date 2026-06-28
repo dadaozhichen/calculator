@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/opt/homebrew/opt/llvm/bin/clang++ *)",
+      "Read(//private/tmp/**)",
+      "Bash(chmod +x *)",
+      "Bash(bash scripts/package.sh --skip-build)",
+      "Bash(bash -x scripts/package.sh --skip-build)",
+      "Bash(git init *)",
+      "Bash(git -C /Users/zhuhk/Desktop/Module/src fetch --depth=1 https://github.com/ocornut/imgui v1.92.7)",
+      "Bash(curl -sSL -o /Users/zhuhk/Desktop/Module/src/imgui_impl_opengl3_loader.h \"https://raw.githubusercontent.com/ocornut/imgui/v1.92.7/backends/imgui_impl_opengl3_loader.h\")"
+    ]
+  }
+}
